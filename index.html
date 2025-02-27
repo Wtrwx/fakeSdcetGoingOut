@@ -165,7 +165,12 @@
         const leaveReason = document.getElementById('leaveReason');
         const proofFile = document.getElementById('proofFile');
         const previewContainer = document.getElementById('previewContainer');
+        const submitTime = document.getElementById('submitTime');
+        const approveTime = document.getElementById('approveTime');
+        const approvalNumber = document.getElementById('approvalNumber');
+        const generateNumberBtn = document.getElementById('generateNumberBtn');
 
+        const customSuffix = document.getElementById('customSuffix');
         // 修改相关证明部分的HTML，添加清除按钮
         const proofFileContainer = proofFile.parentElement;
         const clearBtn = document.createElement('button');
@@ -237,6 +242,11 @@
         function loadCurrentValues() {
             // 清空预览
             previewContainer.innerHTML = '';
+            previewContainer.innerHTML = '';
+            // 获取审批编号
+            const approvalNumberElem = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "审批编号")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            approvalNumber.value = approvalNumberElem ? approvalNumberElem.textContent.trim() : generateApprovalNumber();
+            customSuffix.value = '';
 
             // 获取学生姓名
             const nameElem = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "姓名")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
@@ -292,6 +302,15 @@
                 img.src = imgElem.src;
                 previewContainer.appendChild(img);
             }
+            const submitTimeElem = document.evaluate('//div[@data-v-ad95fa9e=""]/following-sibling::div[contains(@data-v-ad95fa9e, "")]', document.querySelector('.ant-timeline-item:first-child .progress-wraper'), null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            if (submitTimeElem) {
+                submitTime.value = submitTimeElem.textContent.trim();
+            }
+
+            const approveTimeElem = document.evaluate('//div[@data-v-ad95fa9e=""]/following-sibling::div[contains(@data-v-ad95fa9e, "")]', document.querySelector('.ant-timeline-item-last .progress-wraper'), null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            if (approveTimeElem) {
+                approveTime.value = approveTimeElem.textContent.trim();
+            }
         }
 
         // 将日期时间格式转换为input元素需要的格式
@@ -345,7 +364,35 @@
                 editModal.style.display = 'none';
             }
         });
+        // 生成审批编号的函数
+        function generateApprovalNumber() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
 
+            // 时间部分: 年月日时分秒
+            const timePartNumber = `${year}${month}${day}${hours}${minutes}${seconds}`;
+
+            // 获取自定义后缀，如果没有则使用随机数
+            const suffix = customSuffix.value.trim() ||
+                String(Math.floor(Math.random() * 900000) + 100000);
+
+            return timePartNumber + suffix;
+        }
+
+        // 添加生成按钮的点击事件
+        generateNumberBtn.addEventListener('click', function () {
+            approvalNumber.value = generateApprovalNumber();
+        });
+
+        // 如果没有编号，初始化一个
+        if (!approvalNumber.value) {
+            approvalNumber.value = generateApprovalNumber();
+        }
         // 更新页面显示的值
         function updateDisplayValues() {
             // 更新学生姓名
@@ -355,6 +402,10 @@
             const headerUsername = document.querySelector('.header-animat span[data-v-936cf146][style*="font-size: 16px"]');
             if (headerUsername) {
                 headerUsername.textContent = studentName.value;
+            }
+            const submitTextElem = document.evaluate('//span[contains(text(), "提交申请")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            if (submitTextElem) {
+                submitTextElem.textContent = `${studentName.value}提交申请`;
             }
             // 更新辅导员姓名
             const teacherElem = document.evaluate('//span[contains(text(), "（") and contains(text(), "）")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
@@ -374,6 +425,10 @@
             // 更新结束时间
             const formattedEndTime = endTime.value.replace('T', ' ') + ':00';
             document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "结束时间")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = formattedEndTime;
+            document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "姓名")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = studentName.value;
+
+            // 更新审批编号
+            document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "审批编号")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = approvalNumber.value;
 
             // 更新是否离校
             let leaveSchoolValue = '';
@@ -395,7 +450,7 @@
             document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "请假原因")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = leaveReason.value;
 
             const imgElem = document.querySelector('div[data-v-ad95fa9e=""] img[data-v-ad95fa9e=""]');
-    
+
             // 如果图片被清除
             if (imageWasCleared) {
                 if (imgElem) {
@@ -403,7 +458,7 @@
                     imgElem.parentElement.removeChild(imgElem);
                 }
                 imageWasCleared = false; // 重置标记
-            } 
+            }
             // 如果上传了新图片
             else if (proofFile.files && proofFile.files[0] && previewContainer.querySelector('img')) {
                 if (imgElem) {
@@ -416,12 +471,22 @@
                     newImg.style.height = '100%';
                     newImg.style.cursor = 'pointer';
                     newImg.src = previewContainer.querySelector('img').src;
-                    
+
                     const imgContainer = document.querySelector('div[data-v-ad95fa9e=""][style*="display: flex"]');
                     if (imgContainer) {
                         imgContainer.appendChild(newImg);
                     }
                 }
+            }
+
+            const submitTimeElems = document.querySelectorAll('.ant-timeline-item:first-child .progress-wraper div:nth-child(2)');
+            if (submitTimeElems.length > 0) {
+                submitTimeElems[0].textContent = submitTime.value;
+            }
+
+            const approveTimeElems = document.querySelectorAll('.ant-timeline-item-last .progress-wraper div:nth-child(2)');
+            if (approveTimeElems.length > 0) {
+                approveTimeElems[0].textContent = approveTime.value;
             }
         }
     });
@@ -437,20 +502,24 @@
             </div>
 
             <div class="modal-body">
-                <div class="ant-form-item">
-                    <label class="ant-form-item-label">学生姓名</label>
-                    <div class="ant-form-item-control">
-                        <input id="studentName" type="text" class="ant-input" placeholder="请输入学生姓名" />
-                    </div>
-                </div>
 
-                <div class="ant-form-item">
-                    <label class="ant-form-item-label">辅导员姓名</label>
-                    <div class="ant-form-item-control">
-                        <input id="teacherName" type="text" class="ant-input" placeholder="请输入辅导员姓名" />
-                    </div>
-                </div>
+
+
                 <form id="editForm" class="ant-form ant-form-vertical">
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">学生姓名</label>
+                        <div class="ant-form-item-control">
+                            <input id="studentName" type="text" class="ant-input" placeholder="请输入学生姓名" />
+                        </div>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">辅导员姓名</label>
+                        <div class="ant-form-item-control">
+                            <input id="teacherName" type="text" class="ant-input" placeholder="请输入辅导员姓名" />
+                        </div>
+                    </div>
+
                     <div class="ant-form-item">
                         <label class="ant-form-item-label">请假类型</label>
                         <div class="ant-form-item-control">
@@ -474,6 +543,22 @@
                         <label class="ant-form-item-label">结束时间</label>
                         <div class="ant-form-item-control">
                             <input id="endTime" type="datetime-local" class="ant-input" />
+                        </div>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">审批编号</label>
+                        <div class="ant-form-item-control"
+                            style="display: flex; flex-direction: row; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                            <input id="approvalNumber" type="text" class="ant-input" style="flex: 2;" readonly />
+                            <span class="ant-form-item-hint" style="white-space: nowrap; margin: 0 4px;">+</span>
+                            <input id="customSuffix" type="text" class="ant-input" placeholder="自定义后缀"
+                                style="flex: 1;" />
+                            <button type="button" class="ant-btn" id="generateNumberBtn"
+                                style="white-space: nowrap;">生成新编号</button>
+                        </div>
+                        <div class="ant-form-item-hint" style="margin-top: 4px; font-size: 12px; color: #999;">
+                            编号格式：年月日时分秒 + 自定义后缀（可选，留空则使用随机数）
                         </div>
                     </div>
 
@@ -512,6 +597,17 @@
                         <div class="ant-form-item-control">
                             <input type="file" id="proofFile" accept="image/*" />
                             <div id="previewContainer" style="margin-top: 10px; display: flex;"></div>
+                        </div>
+                    </div>
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">流程时间</label>
+                        <div class="time-input-group">
+                            <label>申请时间：</label>
+                            <input id="submitTime" type="text" class="ant-input" placeholder="格式: MM-DD HH:MM" />
+                        </div>
+                        <div class="time-input-group">
+                            <label>审批时间：</label>
+                            <input id="approveTime" type="text" class="ant-input" placeholder="格式: MM-DD HH:MM" />
                         </div>
                     </div>
                 </form>
