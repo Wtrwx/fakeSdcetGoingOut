@@ -135,6 +135,12 @@
             align-items: center;
         }
 
+        /* 添加新的样式规则，将时间线连接线向上移动2像素 */
+        .ant-timeline-item-head {
+            transform: translateY(-2px) !important;
+            /* 使用 !important 确保样式覆盖原有样式 */
+        }
+
         #previewContainer img {
             width: 100px;
             height: 100px;
@@ -302,14 +308,22 @@
                 img.src = imgElem.src;
                 previewContainer.appendChild(img);
             }
+            // 在loadCurrentValues函数中修改申请时间和审批时间的获取方式
             const submitTimeElem = document.evaluate('//div[@data-v-ad95fa9e=""]/following-sibling::div[contains(@data-v-ad95fa9e, "")]', document.querySelector('.ant-timeline-item:first-child .progress-wraper'), null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
             if (submitTimeElem) {
-                submitTime.value = submitTimeElem.textContent.trim();
+                // 将"02-25 07:03"格式转换为datetime-local所需格式
+                const submitTimeText = submitTimeElem.textContent.trim();
+                const currentYear = new Date().getFullYear();
+                const [date, time] = submitTimeText.split(' ');
+                submitTime.value = `${currentYear}-${date.replace('-', '-')}T${time}`;
             }
 
             const approveTimeElem = document.evaluate('//div[@data-v-ad95fa9e=""]/following-sibling::div[contains(@data-v-ad95fa9e, "")]', document.querySelector('.ant-timeline-item-last .progress-wraper'), null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
             if (approveTimeElem) {
-                approveTime.value = approveTimeElem.textContent.trim();
+                const approveTimeText = approveTimeElem.textContent.trim();
+                const currentYear = new Date().getFullYear();
+                const [date, time] = approveTimeText.split(' ');
+                approveTime.value = `${currentYear}-${date.replace('-', '-')}T${time}`;
             }
         }
 
@@ -377,9 +391,9 @@
             // 时间部分: 年月日时分秒
             const timePartNumber = `${year}${month}${day}${hours}${minutes}${seconds}`;
 
-            // 获取自定义后缀，如果没有则使用随机数
+            // 获取自定义后缀，如果没有则使用"000+随机3位数"
             const suffix = customSuffix.value.trim() ||
-                String(Math.floor(Math.random() * 900000) + 100000);
+                "000" + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
 
             return timePartNumber + suffix;
         }
@@ -479,14 +493,27 @@
                 }
             }
 
+            // 在updateDisplayValues函数中修改申请时间和审批时间的更新方式
             const submitTimeElems = document.querySelectorAll('.ant-timeline-item:first-child .progress-wraper div:nth-child(2)');
             if (submitTimeElems.length > 0) {
-                submitTimeElems[0].textContent = submitTime.value;
+                // 从datetime-local格式转回"MM-DD HH:MM"格式
+                const dt = new Date(submitTime.value);
+                const month = String(dt.getMonth() + 1).padStart(2, '0');
+                const day = String(dt.getDate()).padStart(2, '0');
+                const hours = String(dt.getHours()).padStart(2, '0');
+                const minutes = String(dt.getMinutes()).padStart(2, '0');
+                submitTimeElems[0].textContent = `${month}-${day} ${hours}:${minutes}`;
             }
 
             const approveTimeElems = document.querySelectorAll('.ant-timeline-item-last .progress-wraper div:nth-child(2)');
             if (approveTimeElems.length > 0) {
-                approveTimeElems[0].textContent = approveTime.value;
+                // 从datetime-local格式转回"MM-DD HH:MM"格式
+                const dt = new Date(approveTime.value);
+                const month = String(dt.getMonth() + 1).padStart(2, '0');
+                const day = String(dt.getDate()).padStart(2, '0');
+                const hours = String(dt.getHours()).padStart(2, '0');
+                const minutes = String(dt.getMinutes()).padStart(2, '0');
+                approveTimeElems[0].textContent = `${month}-${day} ${hours}:${minutes}`;
             }
         }
     });
@@ -558,7 +585,7 @@
                                 style="white-space: nowrap;">生成新编号</button>
                         </div>
                         <div class="ant-form-item-hint" style="margin-top: 4px; font-size: 12px; color: #999;">
-                            编号格式：年月日时分秒 + 自定义后缀（可选，留空则使用随机数）
+                            编号格式：年月日时分秒 + 六位顺序码（例如000001）
                         </div>
                     </div>
 
@@ -603,11 +630,11 @@
                         <label class="ant-form-item-label">流程时间</label>
                         <div class="time-input-group">
                             <label>申请时间：</label>
-                            <input id="submitTime" type="text" class="ant-input" placeholder="格式: MM-DD HH:MM" />
+                            <input id="submitTime" type="datetime-local" class="ant-input" />
                         </div>
                         <div class="time-input-group">
                             <label>审批时间：</label>
-                            <input id="approveTime" type="text" class="ant-input" placeholder="格式: MM-DD HH:MM" />
+                            <input id="approveTime" type="datetime-local" class="ant-input" />
                         </div>
                     </div>
                 </form>
@@ -647,7 +674,7 @@
                                                 <span class="ant-avatar-string"
                                                     style="transform: scale(1) translateX(-50%);"></span>
                                             </span>
-                                            <span data-v-936cf146="" style="font-size: 16px;">郭俊洁</span>
+                                            <span data-v-936cf146="" style="font-size: 16px;">请假人姓名</span>
                                         </span>
                                     </div>
                                 </div>
@@ -659,7 +686,7 @@
                 <footer class="ant-layout-footer">
                     <div data-v-73fecc01="" class="footer">
                         <div data-v-73fecc01="" class="copyright">
-                            版权所有 © <a data-v-73fecc01="" href="http://www.zixiaokj.com" target="_blank">青岛紫霄网络科技有限公司</a>
+                            版权所有 © <a data-v-73fecc01="" href="http://www.zixiaokj.com" target="_blank">维他入我心</a>
                         </div>
                     </div>
                 </footer>
@@ -691,12 +718,12 @@
                                                 <tr class="ant-descriptions-row">
                                                     <td colspan="1" class="ant-descriptions-item"><span
                                                             class="ant-descriptions-item-label ant-descriptions-item-colon">姓名</span><span
-                                                            class="ant-descriptions-item-content">郭俊洁</span></td>
+                                                            class="ant-descriptions-item-content">请假人姓名</span></td>
                                                 </tr>
                                                 <tr class="ant-descriptions-row">
                                                     <td colspan="1" class="ant-descriptions-item"><span
                                                             class="ant-descriptions-item-label ant-descriptions-item-colon">审批编号</span><span
-                                                            class="ant-descriptions-item-content">20250225070341840000009</span>
+                                                            class="ant-descriptions-item-content">审批编号</span>
                                                     </td>
                                                 </tr>
                                                 <tr class="ant-descriptions-row">
@@ -747,7 +774,7 @@
                                                 <tr class="ant-descriptions-row">
                                                     <td colspan="1" class="ant-descriptions-item"><span
                                                             class="ant-descriptions-item-label ant-descriptions-item-colon">请假原因</span><span
-                                                            class="ant-descriptions-item-content">肠胃不舒服，今早拉肚子，导员请一个课假望批准</span>
+                                                            class="ant-descriptions-item-content">随便编个理由</span>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -763,8 +790,8 @@
                                         <div class="ant-timeline-item-content">
                                             <div data-v-ad95fa9e="" class="progress-wraper">
                                                 <div data-v-ad95fa9e=""><!----><!----><!----><span
-                                                        data-v-ad95fa9e="">郭俊洁提交申请</span><!----><!----><!----></div>
-                                                <div data-v-ad95fa9e="">02-25 07:03</div>
+                                                        data-v-ad95fa9e="">请假人名字提交申请</span><!----><!----><!----></div>
+                                                <div data-v-ad95fa9e="">02-25 07:00</div>
                                             </div><!---->
                                         </div>
                                     </li>
@@ -777,10 +804,10 @@
                                                 <div data-v-ad95fa9e=""><span
                                                         data-v-ad95fa9e="">一级：</span><!----><!----><!----><span
                                                         data-v-ad95fa9e="">辅导员<!----><span
-                                                            data-v-ad95fa9e="">（赵子敏）</span></span><span
+                                                            data-v-ad95fa9e="">（辅导员姓名）</span></span><span
                                                         data-v-ad95fa9e="" style="color: green;">审批通过</span><!---->
                                                 </div>
-                                                <div data-v-ad95fa9e="">02-25 08:36</div>
+                                                <div data-v-ad95fa9e="">02-25 08:30</div>
                                             </div><!---->
                                         </div>
                                     </li>
