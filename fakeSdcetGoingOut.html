@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>山东电子职业技术学院</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .ant-descriptions-row {
+            line-height: 1 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .ant-descriptions-item {
+            padding: 2px 0 !important;
+        }
+
+        .ant-descriptions-item-label,
+        .ant-descriptions-item-content {
+            line-height: 1.2 !important;
+            padding: 0px !important;
+        }
+
+        .progress-wraper {
+            line-height: 1.2 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .ant-descriptions-item-label,
+        .ant-drawer-title,
+        .ant-descriptions-item-content,
+        .progress-wraper,
+        .ant-timeline-item-content,
+        .header span {
+            text-align: left !important;
+        }
+
+        h2[data-v-ad95fa9e] {
+            text-align: left !important;
+            margin-left: 0 !important;
+            padding-left: 0 !important;
+        }
+
+        /* 确保表格单元格内容左对齐 */
+        td {
+            text-align: left !important;
+        }
+
+        .modal {
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 10px 16px;
+            border-top: 1px solid #f0f0f0;
+            text-align: right;
+        }
+
+        .close {
+            float: right;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .ant-form-item {
+            margin-bottom: 16px;
+        }
+
+        .ant-form-item-label {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .ant-input {
+            width: 100%;
+            padding: 4px 11px;
+            border: 1px solid #d9d9d9;
+            border-radius: 2px;
+            height: 32px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .ant-input:focus {
+            border-color: #40a9ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            outline: 0;
+        }
+
+        textarea.ant-input {
+            height: auto;
+            min-height: 80px;
+        }
+
+        .radio-group {
+            display: flex;
+            align-items: center;
+        }
+
+        #previewContainer img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 获取DOM元素
+        const editBtn = document.getElementById('editButton');
+        const editModal = document.getElementById('editModal');
+        const closeBtn = document.querySelector('.close');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        // 表单元素
+        const studentName = document.getElementById('studentName');
+        const teacherName = document.getElementById('teacherName');
+        const leaveType = document.getElementById('leaveType');
+        const startTime = document.getElementById('startTime');
+        const endTime = document.getElementById('endTime');
+        const leaveSchoolRadios = document.getElementsByName('leaveSchool');
+        const destination = document.getElementById('destination');
+        const transportation = document.getElementById('transportation');
+        const leaveReason = document.getElementById('leaveReason');
+        const proofFile = document.getElementById('proofFile');
+        const previewContainer = document.getElementById('previewContainer');
+
+        // 修改相关证明部分的HTML，添加清除按钮
+        const proofFileContainer = proofFile.parentElement;
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'ant-btn';
+        clearBtn.id = 'clearImageBtn';
+        clearBtn.innerText = '清除图片';
+        clearBtn.style.marginLeft = '10px';
+        proofFileContainer.insertBefore(clearBtn, previewContainer);
+
+        // 设置预设时间的函数
+        function setDefaultTimes() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+
+            const currentDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+            // 如果开始时间为空，设置为当前时间
+            if (!startTime.value) {
+                startTime.value = currentDateTime;
+            }
+
+            // 如果结束时间为空，设置为当前时间加3小时
+            if (!endTime.value) {
+                const endDate = new Date(now);
+                endDate.setHours(now.getHours() + 3);
+
+                const endHours = String(endDate.getHours()).padStart(2, '0');
+                const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+
+                endTime.value = `${year}-${month}-${day}T${endHours}:${endMinutes}`;
+            }
+        }
+
+        // 添加一个变量追踪图片是否被清除
+        let imageWasCleared = false;
+
+        // 修改清除图片按钮事件
+        document.getElementById('clearImageBtn').addEventListener('click', function () {
+            previewContainer.innerHTML = '';
+            proofFile.value = ''; // 清除文件输入框
+            imageWasCleared = true; // 标记图片已被清除
+        });
+
+        // 打开编辑弹窗
+        editBtn.addEventListener('click', function () {
+            loadCurrentValues(); // 加载当前值
+            setDefaultTimes(); // 设置预设时间
+            editModal.style.display = 'flex'; // 显示弹窗
+        });
+
+        // 关闭弹窗
+        closeBtn.addEventListener('click', function () {
+            editModal.style.display = 'none';
+        });
+
+        // 点击弹窗外部关闭弹窗
+        window.addEventListener('click', function (event) {
+            if (event.target === editModal) {
+                editModal.style.display = 'none';
+            }
+        });
+
+        // 加载当前表单值
+        function loadCurrentValues() {
+            // 清空预览
+            previewContainer.innerHTML = '';
+
+            // 获取学生姓名
+            const nameElem = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "姓名")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            studentName.value = nameElem ? nameElem.textContent.trim() : '';
+
+            // 获取辅导员姓名
+            const teacherElem = document.evaluate('//span[contains(text(), "（") and contains(text(), "）")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            if (teacherElem) {
+                const teacherNameStr = teacherElem.textContent.trim();
+                // 提取括号中的名字
+                const match = teacherNameStr.match(/（(.*?)）/);
+                if (match && match[1]) {
+                    teacherName.value = match[1];
+                }
+            }
+
+            // 获取请假类型
+            const typeText = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "请假类型")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent.trim();
+            leaveType.value = typeText;
+
+            // 获取开始时间
+            const startTimeText = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "开始时间")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent.trim();
+            startTime.value = formatDateForInput(startTimeText);
+
+            // 获取结束时间
+            const endTimeText = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "结束时间")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent.trim();
+            endTime.value = formatDateForInput(endTimeText);
+
+            // 获取是否离校
+            const leaveSchoolText = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离校")]/following-sibling::span//span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent.trim();
+            for (let radio of leaveSchoolRadios) {
+                if (radio.value === leaveSchoolText) {
+                    radio.checked = true;
+                }
+            }
+
+            // 获取目的地
+            const destinationElem = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "目的地")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            destination.value = destinationElem ? destinationElem.textContent.trim() : '';
+
+            // 获取交通工具
+            const transportationElem = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "交通工具")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            transportation.value = transportationElem ? transportationElem.textContent.trim() : '';
+
+            // 获取请假原因
+            const reasonElem = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "请假原因")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            leaveReason.value = reasonElem ? reasonElem.textContent.trim() : '';
+
+            // 显示当前证明图片
+            const imgElem = document.querySelector('div[data-v-ad95fa9e=""] img[data-v-ad95fa9e=""]');
+            if (imgElem) {
+                const img = document.createElement('img');
+                img.src = imgElem.src;
+                previewContainer.appendChild(img);
+            }
+        }
+
+        // 将日期时间格式转换为input元素需要的格式
+        function formatDateForInput(dateTimeStr) {
+            // 处理格式如 "2025-02-25 08:30:00"
+            if (!dateTimeStr) return '';
+
+            const parts = dateTimeStr.split(' ');
+            if (parts.length === 2) {
+                const timeParts = parts[1].split(':');
+                return parts[0] + 'T' + timeParts[0] + ':' + timeParts[1];
+            }
+            return '';
+        }
+
+        // 图片预览功能
+        proofFile.addEventListener('change', function (e) {
+            previewContainer.innerHTML = ''; // 清空预览区域
+
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    previewContainer.appendChild(img);
+                }
+
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 保存按钮点击事件
+        saveBtn.addEventListener('click', function () {
+            // 这里可以添加数据验证逻辑
+
+            // 更新页面上的数据
+            updateDisplayValues();
+
+            // 关闭弹窗
+            editModal.style.display = 'none';
+
+            // 显示成功消息
+            alert('保存成功！');
+        });
+
+        // 取消按钮点击事件
+        cancelBtn.addEventListener('click', function () {
+            if (confirm('确定取消编辑？未保存的更改将丢失。')) {
+                editModal.style.display = 'none';
+            }
+        });
+
+        // 更新页面显示的值
+        function updateDisplayValues() {
+            // 更新学生姓名
+            document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "姓名")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = studentName.value;
+
+            // 添加: 更新header-animat中的用户名
+            const headerUsername = document.querySelector('.header-animat span[data-v-936cf146][style*="font-size: 16px"]');
+            if (headerUsername) {
+                headerUsername.textContent = studentName.value;
+            }
+            // 更新辅导员姓名
+            const teacherElem = document.evaluate('//span[contains(text(), "（") and contains(text(), "）")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            if (teacherElem) {
+                const originalText = teacherElem.textContent;
+                // 替换括号中的名字
+                teacherElem.textContent = originalText.replace(/（.*?）/, `（${teacherName.value}）`);
+            }
+
+            // 更新请假类型
+            document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "请假类型")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = leaveType.value;
+
+            // 更新开始时间
+            const formattedStartTime = startTime.value.replace('T', ' ') + ':00';
+            document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "开始时间")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = formattedStartTime;
+
+            // 更新结束时间
+            const formattedEndTime = endTime.value.replace('T', ' ') + ':00';
+            document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "结束时间")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = formattedEndTime;
+
+            // 更新是否离校
+            let leaveSchoolValue = '';
+            for (let radio of leaveSchoolRadios) {
+                if (radio.checked) {
+                    leaveSchoolValue = radio.value;
+                    break;
+                }
+            }
+            document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离校")]/following-sibling::span//span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = leaveSchoolValue;
+
+            // 更新目的地
+            document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "目的地")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = destination.value;
+
+            // 更新交通工具
+            document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "交通工具")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = transportation.value;
+
+            // 更新请假原因
+            document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "请假原因")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = leaveReason.value;
+
+            const imgElem = document.querySelector('div[data-v-ad95fa9e=""] img[data-v-ad95fa9e=""]');
+    
+            // 如果图片被清除
+            if (imageWasCleared) {
+                if (imgElem) {
+                    // 移除原始图片元素
+                    imgElem.parentElement.removeChild(imgElem);
+                }
+                imageWasCleared = false; // 重置标记
+            } 
+            // 如果上传了新图片
+            else if (proofFile.files && proofFile.files[0] && previewContainer.querySelector('img')) {
+                if (imgElem) {
+                    imgElem.src = previewContainer.querySelector('img').src;
+                } else {
+                    // 如果原来没有图片，创建一个新的
+                    const newImg = document.createElement('img');
+                    newImg.setAttribute('data-v-ad95fa9e', '');
+                    newImg.style.width = '100px';
+                    newImg.style.height = '100%';
+                    newImg.style.cursor = 'pointer';
+                    newImg.src = previewContainer.querySelector('img').src;
+                    
+                    const imgContainer = document.querySelector('div[data-v-ad95fa9e=""][style*="display: flex"]');
+                    if (imgContainer) {
+                        imgContainer.appendChild(newImg);
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+<body>
+    <!-- 编辑弹窗 -->
+    <div id="editModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>编辑请假信息</h2>
+            </div>
+
+            <div class="modal-body">
+                <div class="ant-form-item">
+                    <label class="ant-form-item-label">学生姓名</label>
+                    <div class="ant-form-item-control">
+                        <input id="studentName" type="text" class="ant-input" placeholder="请输入学生姓名" />
+                    </div>
+                </div>
+
+                <div class="ant-form-item">
+                    <label class="ant-form-item-label">辅导员姓名</label>
+                    <div class="ant-form-item-control">
+                        <input id="teacherName" type="text" class="ant-input" placeholder="请输入辅导员姓名" />
+                    </div>
+                </div>
+                <form id="editForm" class="ant-form ant-form-vertical">
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">请假类型</label>
+                        <div class="ant-form-item-control">
+                            <select id="leaveType" class="ant-input">
+                                <option value="病假">病假</option>
+                                <option value="事假">事假</option>
+                                <option value="周末离校报备">周末离校报备</option>
+                                <option value="节假日离校">节假日离校</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">开始时间</label>
+                        <div class="ant-form-item-control">
+                            <input id="startTime" type="datetime-local" class="ant-input" />
+                        </div>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">结束时间</label>
+                        <div class="ant-form-item-control">
+                            <input id="endTime" type="datetime-local" class="ant-input" />
+                        </div>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">是否离校</label>
+                        <div class="ant-form-item-control radio-group">
+                            <label><input type="radio" name="leaveSchool" value="是"> 是</label>
+                            <label style="margin-left: 20px;"><input type="radio" name="leaveSchool" value="否">
+                                否</label>
+                        </div>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">目的地</label>
+                        <div class="ant-form-item-control">
+                            <input id="destination" type="text" class="ant-input" placeholder="请填写目的地" />
+                        </div>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">交通工具</label>
+                        <div class="ant-form-item-control">
+                            <input id="transportation" type="text" class="ant-input" placeholder="请填写交通工具" />
+                        </div>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">请假原因</label>
+                        <div class="ant-form-item-control">
+                            <textarea id="leaveReason" class="ant-input" rows="4" placeholder="请填写请假原因"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="ant-form-item">
+                        <label class="ant-form-item-label">相关证明</label>
+                        <div class="ant-form-item-control">
+                            <input type="file" id="proofFile" accept="image/*" />
+                            <div id="previewContainer" style="margin-top: 10px; display: flex;"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="ant-btn ant-btn-primary" id="saveBtn">保 存</button>
+                <button type="button" class="ant-btn" id="cancelBtn">取 消</button>
+            </div>
+        </div>
+    </div>
+    <div id="app">
+        <section class="ant-layout layout mobile">
+            <section class="ant-layout sidemenu content-width-Fixed" style="padding-left: 0px; min-height: 100vh;">
+                <div class="header-animat">
+                    <header class="ant-layout-header ant-header-side-opened" style="padding: 0px;">
+                        <div class="header" style="display: flex; justify-content: space-between;">
+                            <i aria-label="图标: menu-unfold" tabindex="-1" class="trigger anticon anticon-menu-unfold">
+                                <svg viewBox="64 64 896 896" data-icon="menu-unfold" width="1em" height="1em"
+                                    fill="currentColor" aria-hidden="true" focusable="false">
+                                    <path
+                                        d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM142.4 642.1L298.7 519a8.84 8.84 0 0 0 0-13.9L142.4 381.9c-5.8-4.6-14.4-.5-14.4 6.9v246.3a8.9 8.9 0 0 0 14.4 7z">
+                                    </path>
+                                </svg>
+                            </i>
+                            <div style="display: inline;">
+                                <button type="button" class="ant-btn ant-btn-link"
+                                    style="position: relative; top: 1px;">
+                                    <span>返回工作台</span>
+                                </button>
+                                <div data-v-936cf146="" class="user-wrapper">
+                                    <div data-v-936cf146="" class="content-box">
+                                        <span data-v-936cf146=""
+                                            class="action ant-dropdown-link user-dropdown-menu ant-dropdown-trigger"
+                                            style="padding: 0px 11px;">
+                                            <span data-v-936cf146=""
+                                                class="avatar ant-avatar ant-avatar-sm ant-avatar-circle">
+                                                <span class="ant-avatar-string"
+                                                    style="transform: scale(1) translateX(-50%);"></span>
+                                            </span>
+                                            <span data-v-936cf146="" style="font-size: 16px;">郭俊洁</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+                </div>
+
+                <footer class="ant-layout-footer">
+                    <div data-v-73fecc01="" class="footer">
+                        <div data-v-73fecc01="" class="copyright">
+                            版权所有 © <a data-v-73fecc01="" href="http://www.zixiaokj.com" target="_blank">青岛紫霄网络科技有限公司</a>
+                        </div>
+                    </div>
+                </footer>
+            </section>
+        </section>
+    </div>
+
+
+    <div>
+        <div data-v-ad95fa9e="" tabindex="-1" class="ant-drawer ant-drawer-bottom ant-drawer-open mydrawer">
+            <div class="ant-drawer-mask"></div>
+            <div class="ant-drawer-content-wrapper" style="height: 95%;">
+                <div class="ant-drawer-content">
+                    <div class="ant-drawer-wrapper-body">
+                        <div class="ant-drawer-header">
+                            <div class="ant-drawer-title">编辑</div><button aria-label="Close" class="ant-drawer-close"><i
+                                    aria-label="图标: close" class="anticon anticon-close"><svg viewBox="64 64 896 896"
+                                        data-icon="close" width="1em" height="1em" fill="currentColor"
+                                        aria-hidden="true" focusable="false" class="">
+
+                                    </svg></i></button>
+                        </div>
+                        <div class="ant-drawer-body">
+                            <div data-v-ad95fa9e="">
+                                <div data-v-ad95fa9e="" class="ant-descriptions">
+                                    <div class="ant-descriptions-view">
+                                        <table>
+                                            <tbody>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">姓名</span><span
+                                                            class="ant-descriptions-item-content">郭俊洁</span></td>
+                                                </tr>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">审批编号</span><span
+                                                            class="ant-descriptions-item-content">20250225070341840000009</span>
+                                                    </td>
+                                                </tr>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">请假类型</span><span
+                                                            class="ant-descriptions-item-content">病假</span></td>
+                                                </tr>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">相关证明</span><span
+                                                            class="ant-descriptions-item-content">
+                                                            <div data-v-ad95fa9e=""
+                                                                style="display: flex; flex-wrap: wrap; align-items: center;">
+                                                                <img data-v-ad95fa9e=""
+                                                                    src="https://ezxg.sdcet.edu.cn:10012/ctfile/FileUp/UpAllFile/2025/2025-02/2025-02-25/User_20250225070201299_42c7abc3bbcd43e3b9f0def4ed9e49fd.jpg?FileTrueName=MVIMG_20250225_063930.jpg"
+                                                                    style="width: 100px; height: 100%; cursor: pointer;">
+                                                            </div>
+                                                        </span></td>
+                                                </tr>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">开始时间</span><span
+                                                            class="ant-descriptions-item-content">2025-02-25
+                                                            08:30:00</span></td>
+                                                </tr>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">结束时间</span><span
+                                                            class="ant-descriptions-item-content">2025-02-25
+                                                            11:30:00</span></td>
+                                                </tr>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">是否离校</span><span
+                                                            class="ant-descriptions-item-content"><span
+                                                                data-v-ad95fa9e="">否</span></span></td>
+                                                </tr>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">目的地</span><span
+                                                            class="ant-descriptions-item-content"></span></td>
+                                                </tr>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">交通工具</span><span
+                                                            class="ant-descriptions-item-content"></span></td>
+                                                </tr>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">请假原因</span><span
+                                                            class="ant-descriptions-item-content">肠胃不舒服，今早拉肚子，导员请一个课假望批准</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <h2 data-v-ad95fa9e="">流程</h2>
+                                <ul data-v-ad95fa9e="" class="ant-timeline">
+                                    <li data-v-ad95fa9e="" class="ant-timeline-item">
+                                        <div class="ant-timeline-item-tail"></div>
+                                        <div class="ant-timeline-item-head ant-timeline-item-head-#1890ff"
+                                            style="border-color: rgb(24, 144, 255);"></div>
+                                        <div class="ant-timeline-item-content">
+                                            <div data-v-ad95fa9e="" class="progress-wraper">
+                                                <div data-v-ad95fa9e=""><!----><!----><!----><span
+                                                        data-v-ad95fa9e="">郭俊洁提交申请</span><!----><!----><!----></div>
+                                                <div data-v-ad95fa9e="">02-25 07:03</div>
+                                            </div><!---->
+                                        </div>
+                                    </li>
+                                    <li data-v-ad95fa9e="" class="ant-timeline-item ant-timeline-item-last">
+                                        <div class="ant-timeline-item-tail"></div>
+                                        <div class="ant-timeline-item-head ant-timeline-item-head-#1890ff"
+                                            style="border-color: rgb(24, 144, 255);"></div>
+                                        <div class="ant-timeline-item-content">
+                                            <div data-v-ad95fa9e="" class="progress-wraper">
+                                                <div data-v-ad95fa9e=""><span
+                                                        data-v-ad95fa9e="">一级：</span><!----><!----><!----><span
+                                                        data-v-ad95fa9e="">辅导员<!----><span
+                                                            data-v-ad95fa9e="">（赵子敏）</span></span><span
+                                                        data-v-ad95fa9e="" style="color: green;">审批通过</span><!---->
+                                                </div>
+                                                <div data-v-ad95fa9e="">02-25 08:36</div>
+                                            </div><!---->
+                                        </div>
+                                    </li>
+                                </ul>
+                                <div data-v-ad95fa9e="" style="text-align: center;"><button data-v-ad95fa9e=""
+                                        type="button" class="ant-btn ant-btn-primary" id="editButton"><span>编
+                                            辑</span></button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
