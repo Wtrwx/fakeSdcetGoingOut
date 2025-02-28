@@ -167,6 +167,8 @@
         const startTime = document.getElementById('startTime');
         const endTime = document.getElementById('endTime');
         const leaveSchoolRadios = document.getElementsByName('leaveSchool');
+        const leaveJinanRadios = document.getElementsByName('leaveJinan');
+        const leaveJinanFormItem = document.getElementById('leaveJinanFormItem');
         const destination = document.getElementById('destination');
         const transportation = document.getElementById('transportation');
         const leaveReason = document.getElementById('leaveReason');
@@ -230,6 +232,7 @@
         editBtn.addEventListener('click', function () {
             loadCurrentValues(); // 加载当前值
             setDefaultTimes(); // 设置预设时间
+            updateLeaveJinanVisibility(); // 更新是否离开济南的显示
             editModal.style.display = 'flex'; // 显示弹窗
         });
 
@@ -244,6 +247,35 @@
                 editModal.style.display = 'none';
             }
         });
+
+        // 处理是否离校单选按钮的变化
+        for (let radio of leaveSchoolRadios) {
+            radio.addEventListener('change', updateLeaveJinanVisibility);
+        }
+
+        // 更新是否离开济南表单项的显示状态
+        function updateLeaveJinanVisibility() {
+            let isLeaveSchool = false;
+            for (let radio of leaveSchoolRadios) {
+                if (radio.checked && radio.value === "是") {
+                    isLeaveSchool = true;
+                    break;
+                }
+            }
+            
+            if (isLeaveSchool) {
+                leaveJinanFormItem.style.display = 'block';
+            } else {
+                leaveJinanFormItem.style.display = 'none';
+                // 如果不离校，设置"是否离开济南"为"否"
+                for (let radio of leaveJinanRadios) {
+                    if (radio.value === "否") {
+                        radio.checked = true;
+                        break;
+                    }
+                }
+            }
+        }
 
         // 加载当前表单值
         function loadCurrentValues() {
@@ -290,6 +322,24 @@
                 }
             }
 
+            // 获取是否离开济南
+            const leaveJinanElem = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离开济南")]/following-sibling::span//span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            if (leaveJinanElem) {
+                const leaveJinanText = leaveJinanElem.textContent.trim();
+                for (let radio of leaveJinanRadios) {
+                    if (radio.value === leaveJinanText) {
+                        radio.checked = true;
+                    }
+                }
+            } else {
+                // 默认设置为"否"
+                for (let radio of leaveJinanRadios) {
+                    if (radio.value === "否") {
+                        radio.checked = true;
+                    }
+                }
+            }
+
             // 获取目的地
             const destinationElem = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "目的地")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
             destination.value = destinationElem ? destinationElem.textContent.trim() : '';
@@ -326,6 +376,9 @@
                 const [date, time] = approveTimeText.split(' ');
                 approveTime.value = `${currentYear}-${date.replace('-', '-')}T${time}`;
             }
+
+            // 根据当前是否离校的值更新是否离开济南的显示状态
+            updateLeaveJinanVisibility();
         }
 
         // 将日期时间格式转换为input元素需要的格式
@@ -408,6 +461,7 @@
         if (!approvalNumber.value) {
             approvalNumber.value = generateApprovalNumber();
         }
+        
         // 更新页面显示的值
         function updateDisplayValues() {
             // 更新学生姓名
@@ -454,6 +508,35 @@
                 }
             }
             document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离校")]/following-sibling::span//span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = leaveSchoolValue;
+
+            // 处理是否离开济南的条件显示逻辑
+            const leaveJinanRow = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离开济南")]/ancestor::tr', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            
+            // 获取是否离开济南的值
+            let leaveJinanValue = '';
+            for (let radio of leaveJinanRadios) {
+                if (radio.checked) {
+                    leaveJinanValue = radio.value;
+                    break;
+                }
+            }
+            
+            if (leaveSchoolValue === '是') {
+                // 如果离校，则显示是否离开济南
+                if (leaveJinanRow) {
+                    leaveJinanRow.style.display = '';
+                    // 更新是否离开济南的值
+                    const leaveJinanSpan = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离开济南")]/following-sibling::span//span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    if (leaveJinanSpan) {
+                        leaveJinanSpan.textContent = leaveJinanValue;
+                    }
+                }
+            } else {
+                // 如果不离校，则隐藏是否离开济南
+                if (leaveJinanRow) {
+                    leaveJinanRow.style.display = 'none';
+                }
+            }
 
             // 更新目的地
             document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "目的地")]/following-sibling::span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent = destination.value;
@@ -516,6 +599,14 @@
                 const minutes = String(dt.getMinutes()).padStart(2, '0');
                 approveTimeElems[0].textContent = `${month}-${day} ${hours}:${minutes}`;
             }
+        }
+
+        // 页面加载时检查是否离校的值，决定是否显示是否离开济南
+        const leaveSchoolText = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离校")]/following-sibling::span//span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent.trim();
+        const leaveJinanRow = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离开济南")]/ancestor::tr', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        
+        if (leaveJinanRow && leaveSchoolText !== '是') {
+            leaveJinanRow.style.display = 'none';
         }
     });
 </script>
@@ -596,6 +687,14 @@
                             <label><input type="radio" name="leaveSchool" value="是"> 是</label>
                             <label style="margin-left: 20px;"><input type="radio" name="leaveSchool" value="否">
                                 否</label>
+                        </div>
+                    </div>
+
+                    <div class="ant-form-item" id="leaveJinanFormItem">
+                        <label class="ant-form-item-label">是否离开济南</label>
+                        <div class="ant-form-item-control radio-group">
+                            <label><input type="radio" name="leaveJinan" value="是"> 是</label>
+                            <label style="margin-left: 20px;"><input type="radio" name="leaveJinan" value="否"> 否</label>
                         </div>
                     </div>
 
@@ -739,7 +838,7 @@
                                                             <div data-v-ad95fa9e=""
                                                                 style="display: flex; flex-wrap: wrap; align-items: center;">
                                                                 <img data-v-ad95fa9e=""
-                                                                                                                                        src="https://ezxg.sdcet.edu.cn:10012/ctfile/FileUp/UpAllFile/2025/2025-02/2025-02-25/User_20250225070201299_42c7abc3bbcd43e3b9f0def4ed9e49fd.jpg?FileTrueName=MVIMG_20250225_063930.jpg"
+                                                                    src="https://ezxg.sdcet.edu.cn:10012/ctfile/FileUp/UpAllFile/2025/2025-02/2025-02-25/User_20250225070201299_42c7abc3bbcd43e3b9f0def4ed9e49fd.jpg?FileTrueName=MVIMG_20250225_063930.jpg"
                                                                     style="width: 100px; height: 100%; cursor: pointer;">
                                                             </div>
                                                         </span></td>
@@ -759,6 +858,12 @@
                                                 <tr class="ant-descriptions-row">
                                                     <td colspan="1" class="ant-descriptions-item"><span
                                                             class="ant-descriptions-item-label ant-descriptions-item-colon">是否离校</span><span
+                                                            class="ant-descriptions-item-content"><span
+                                                                data-v-ad95fa9e="">否</span></span></td>
+                                                </tr>
+                                                <tr class="ant-descriptions-row">
+                                                    <td colspan="1" class="ant-descriptions-item"><span
+                                                            class="ant-descriptions-item-label ant-descriptions-item-colon">是否离开济南</span><span
                                                             class="ant-descriptions-item-content"><span
                                                                 data-v-ad95fa9e="">否</span></span></td>
                                                 </tr>
