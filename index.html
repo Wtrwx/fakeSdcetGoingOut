@@ -414,14 +414,27 @@
 
         // 保存按钮点击事件
         saveBtn.addEventListener('click', function () {
+            // 标记是否强制保存
+            let forceToSave = false;
+            
             // 验证审批编号是否与日期匹配
-            if (!validateApprovalNumber()) {
-                return; // 验证失败，不继续保存
+            if (!validateApprovalNumber(forceToSave)) {
+                // 询问是否要无视风险强制保存
+                if (confirm('检测到审批编号验证不通过！是否无视风险强制保存？\n(强制保存可能导致数据不一致)')) {
+                    forceToSave = true;
+                } else {
+                    return; // 用户选择不强制保存，终止操作
+                }
             }
 
             // 验证时间逻辑
-            if (!validateTimes()) {
-                return; // 验证失败，不继续保存
+            if (!validateTimes(forceToSave)) {
+                // 询问是否要无视风险强制保存
+                if (confirm('检测到时间验证不通过！是否无视风险强制保存？\n(强制保存可能导致数据不合理)')) {
+                    forceToSave = true;
+                } else {
+                    return; // 用户选择不强制保存，终止操作
+                }
             }
 
             // 更新页面上的数据
@@ -431,11 +444,18 @@
             editModal.style.display = 'none';
 
             // 显示成功消息
-            alert('保存成功！');
+            if (forceToSave) {
+                alert('已强制保存！请注意数据可能存在不一致或不合理的情况。');
+            } else {
+                alert('保存成功！');
+            }
         });
 
-        // 验证审批编号是否与日期匹配
-        function validateApprovalNumber() {
+        // 验证审批编号是否与日期匹配，增加强制保存参数
+        function validateApprovalNumber(forceToSave = false) {
+            // 如果是强制保存，则跳过验证
+            if (forceToSave) return true;
+            
             const approvalNumberValue = approvalNumber.value;
             const startTimeValue = startTime.value;
             
@@ -466,8 +486,11 @@
             return true;
         }
 
-        // 验证时间逻辑
-        function validateTimes() {
+        // 验证时间逻辑，增加强制保存参数
+        function validateTimes(forceToSave = false) {
+            // 如果是强制保存，则跳过验证
+            if (forceToSave) return true;
+            
             const now = new Date();
             const startTimeValue = new Date(startTime.value);
             const endTimeValue = new Date(endTime.value);
