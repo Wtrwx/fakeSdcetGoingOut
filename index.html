@@ -414,7 +414,15 @@
 
         // 保存按钮点击事件
         saveBtn.addEventListener('click', function () {
-            // 这里可以添加数据验证逻辑
+            // 验证审批编号是否与日期匹配
+            if (!validateApprovalNumber()) {
+                return; // 验证失败，不继续保存
+            }
+
+            // 验证时间逻辑
+            if (!validateTimes()) {
+                return; // 验证失败，不继续保存
+            }
 
             // 更新页面上的数据
             updateDisplayValues();
@@ -426,23 +434,80 @@
             alert('保存成功！');
         });
 
-        // 取消按钮点击事件
-        cancelBtn.addEventListener('click', function () {
-            if (confirm('确定取消编辑？未保存的更改将丢失。')) {
-                editModal.style.display = 'none';
+        // 验证审批编号是否与日期匹配
+        function validateApprovalNumber() {
+            const approvalNumberValue = approvalNumber.value;
+            const startTimeValue = startTime.value;
+            
+            if (!approvalNumberValue || !startTimeValue) {
+                alert('审批编号或开始时间不能为空！');
+                return false;
             }
-        });
-        // 生成审批编号的函数
-        function generateApprovalNumber() {
+            
+            // 从开始时间中提取年月日
+            const startDate = new Date(startTimeValue);
+            const year = startDate.getFullYear();
+            const month = String(startDate.getMonth() + 1).padStart(2, '0');
+            const day = String(startDate.getDate()).padStart(2, '0');
+            
+            // 审批编号前8位应该与年月日匹配
+            const dateFromNumber = approvalNumberValue.substring(0, 8);
+            const dateFromStart = `${year}${month}${day}`;
+            
+            if (dateFromNumber !== dateFromStart) {
+                if (confirm('审批编号与请假日期不匹配！是否自动生成新的编号？')) {
+                    approvalNumber.value = generateApprovalNumber();
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // 验证时间逻辑
+        function validateTimes() {
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
+            const startTimeValue = new Date(startTime.value);
+            const endTimeValue = new Date(endTime.value);
+            const submitTimeValue = new Date(submitTime.value);
+            const approveTimeValue = new Date(approveTime.value);
+            
+            // 检查开始时间是否早于结束时间
+            if (startTimeValue >= endTimeValue) {
+                alert('开始时间必须早于结束时间！');
+                return false;
+            }
+            
+            // 检查申请时间是否早于审批时间
+            if (submitTimeValue >= approveTimeValue) {
+                alert('申请时间必须早于审批时间！');
+                return false;
+            }
+            
+            // 检查申请时间和审批时间是否晚于当前时间
+            if (submitTimeValue > now || approveTimeValue > now) {
+                alert('申请时间和审批时间不能晚于当前时间！');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // 生成审批编号的修改版本（确保使用开始时间的日期）
+        function generateApprovalNumber() {
+            const startTimeValue = startTime.value ? new Date(startTime.value) : new Date();
+            const year = startTimeValue.getFullYear();
+            const month = String(startTimeValue.getMonth() + 1).padStart(2, '0');
+            const day = String(startTimeValue.getDate()).padStart(2, '0');
+            
+            const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
 
-            // 时间部分: 年月日时分秒
+            // 时间部分: 年月日时分秒，确保年月日与开始时间匹配
             const timePartNumber = `${year}${month}${day}${hours}${minutes}${seconds}`;
 
             // 获取自定义后缀，如果没有则使用"000+随机3位数"
@@ -823,7 +888,7 @@
                                                 <tr class="ant-descriptions-row">
                                                     <td colspan="1" class="ant-descriptions-item"><span
                                                             class="ant-descriptions-item-label ant-descriptions-item-colon">审批编号</span><span
-                                                            class="ant-descriptions-item-content">审批编号</span>
+                                                            class="ant-descriptions-item-content">20250225070003000092</span>
                                                     </td>
                                                 </tr>
                                                 <tr class="ant-descriptions-row">
