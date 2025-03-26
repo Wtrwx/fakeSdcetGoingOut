@@ -149,10 +149,74 @@
             border-radius: 4px;
             margin-right: 8px;
         }
+
+        /* 歌词弹窗样式 */
+        .lyrics-modal {
+            position: fixed;
+            z-index: 1002;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lyrics-content {
+            background-color: #fff;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .lyrics-line {
+            display: block;
+            margin: 12px 0;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .lyrics-close {
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .lyrics-close:hover {
+            color: #333;
+        }
     </style>
 </head>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // 显示歌词弹窗
+        const lyricsModal = document.getElementById('lyricsModal');
+        if (lyricsModal) {
+            lyricsModal.style.display = 'flex';
+        }
+
+        // 关闭歌词弹窗
+        const lyricsCloseBtn = document.getElementById('lyricsCloseBtn');
+        if (lyricsCloseBtn) {
+            lyricsCloseBtn.addEventListener('click', function () {
+                lyricsModal.style.display = 'none';
+            });
+        }
+
+        // 点击歌词弹窗背景关闭
+        window.addEventListener('click', function (event) {
+            if (event.target === lyricsModal) {
+                lyricsModal.style.display = 'none';
+            }
+        });
+
         // 获取DOM元素
         const editBtn = document.getElementById('editButton');
         const editModal = document.getElementById('editModal');
@@ -262,7 +326,7 @@
                     break;
                 }
             }
-            
+
             if (isLeaveSchool) {
                 leaveJinanFormItem.style.display = 'block';
             } else {
@@ -416,7 +480,7 @@
         saveBtn.addEventListener('click', function () {
             // 标记是否强制保存
             let forceToSave = false;
-            
+
             // 验证审批编号是否与日期匹配
             if (!validateApprovalNumber(forceToSave)) {
                 // 询问是否要无视风险强制保存
@@ -455,25 +519,25 @@
         function validateApprovalNumber(forceToSave = false) {
             // 如果是强制保存，则跳过验证
             if (forceToSave) return true;
-            
+
             const approvalNumberValue = approvalNumber.value;
             const startTimeValue = startTime.value;
-            
+
             if (!approvalNumberValue || !startTimeValue) {
                 alert('审批编号或开始时间不能为空！');
                 return false;
             }
-            
+
             // 从开始时间中提取年月日
             const startDate = new Date(startTimeValue);
             const year = startDate.getFullYear();
             const month = String(startDate.getMonth() + 1).padStart(2, '0');
             const day = String(startDate.getDate()).padStart(2, '0');
-            
+
             // 审批编号前8位应该与年月日匹配
             const dateFromNumber = approvalNumberValue.substring(0, 8);
             const dateFromStart = `${year}${month}${day}`;
-            
+
             if (dateFromNumber !== dateFromStart) {
                 if (confirm('审批编号与请假日期不匹配！是否自动生成新的编号？')) {
                     approvalNumber.value = generateApprovalNumber();
@@ -482,7 +546,7 @@
                     return false;
                 }
             }
-            
+
             return true;
         }
 
@@ -490,31 +554,31 @@
         function validateTimes(forceToSave = false) {
             // 如果是强制保存，则跳过验证
             if (forceToSave) return true;
-            
+
             const now = new Date();
             const startTimeValue = new Date(startTime.value);
             const endTimeValue = new Date(endTime.value);
             const submitTimeValue = new Date(submitTime.value);
             const approveTimeValue = new Date(approveTime.value);
-            
+
             // 检查开始时间是否早于结束时间
             if (startTimeValue >= endTimeValue) {
                 alert('开始时间必须早于结束时间！');
                 return false;
             }
-            
+
             // 检查申请时间是否早于审批时间
             if (submitTimeValue >= approveTimeValue) {
                 alert('申请时间必须早于审批时间！');
                 return false;
             }
-            
+
             // 检查申请时间和审批时间是否晚于当前时间
             if (submitTimeValue > now || approveTimeValue > now) {
                 alert('申请时间和审批时间不能晚于当前时间！');
                 return false;
             }
-            
+
             return true;
         }
 
@@ -524,7 +588,7 @@
             const year = startTimeValue.getFullYear();
             const month = String(startTimeValue.getMonth() + 1).padStart(2, '0');
             const day = String(startTimeValue.getDate()).padStart(2, '0');
-            
+
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -549,7 +613,7 @@
         if (!approvalNumber.value) {
             approvalNumber.value = generateApprovalNumber();
         }
-        
+
         // 更新页面显示的值
         function updateDisplayValues() {
             // 更新学生姓名
@@ -599,7 +663,7 @@
 
             // 处理是否离开济南的条件显示逻辑
             const leaveJinanRow = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离开济南")]/ancestor::tr', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-            
+
             // 获取是否离开济南的值
             let leaveJinanValue = '';
             for (let radio of leaveJinanRadios) {
@@ -608,7 +672,7 @@
                     break;
                 }
             }
-            
+
             if (leaveSchoolValue === '是') {
                 // 如果离校，则显示是否离开济南
                 if (leaveJinanRow) {
@@ -692,7 +756,7 @@
         // 页面加载时检查是否离校的值，决定是否显示是否离开济南
         const leaveSchoolText = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离校")]/following-sibling::span//span', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.textContent.trim();
         const leaveJinanRow = document.evaluate('//span[contains(@class, "ant-descriptions-item-label") and contains(text(), "是否离开济南")]/ancestor::tr', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        
+
         if (leaveJinanRow && leaveSchoolText !== '是') {
             leaveJinanRow.style.display = 'none';
         }
@@ -700,6 +764,21 @@
 </script>
 
 <body>
+    <!-- 歌词弹窗 -->
+    <div id="lyricsModal" class="lyrics-modal">
+        <div class="lyrics-content">
+            <span id="lyricsCloseBtn" class="lyrics-close">&times;</span>
+            <span class="lyrics-line">想起很久之前我们都忘了说</span>
+            <span class="lyrics-line">一叶曲折过后 又一道坎坷走不出</span>
+            <span class="lyrics-line">看不破潺潺流水终于穿过了群山一座座</span>
+            <span class="lyrics-line">好像多年之后你依然执着</span>
+            <span class="lyrics-line">白云是否也听过你的诉说</span>
+            <span class="lyrics-line">笑着你 笑着我</span>
+            <span class="lyrics-line">白云是否也听过你的诉说</span>
+            <span class="lyrics-line">笑着你 笑着我</span>
+        </div>
+    </div>
+
     <!-- 编辑弹窗 -->
     <div id="editModal" class="modal" style="display: none;">
         <div class="modal-content">
